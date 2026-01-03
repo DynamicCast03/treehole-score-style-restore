@@ -90,6 +90,8 @@
     }
 
     function getScoreDisplay(score) {
+        if (typeof score == 'string' && score == '合格') return 'P';
+        if (typeof score == 'string' && score == '缓考') return 'I';
         if (typeof score === 'number') return formatNumber(score, 1);
         return score || '-.--';
     }
@@ -521,7 +523,7 @@
             let gpaSum = 0, scoreSum = 0, n = 0, creditSum = 0;
             let data = [];
             arr.forEach(c => {
-                if (c.score !== 'W') creditSum += c.credit;
+                if (c.score !== 'W' && c.score !== 'I') creditSum += c.credit;
                 data.push({ left: `${formatNumber(c.credit, 1)}学分`, right: `${c.name} - ${getScoreDisplay(c.score)}` });
                 if (typeof c.score === 'number') {
                     n++;
