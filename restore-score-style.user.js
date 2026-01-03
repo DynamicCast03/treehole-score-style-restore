@@ -476,8 +476,7 @@
 
         let totalCredit = 0;
         courses.forEach(c => {
-            let g = scoreToGPA(c.score);
-            if (g !== null || c.score === 'P' || c.score === 'EX') totalCredit += c.credit;
+            if (c.score !== 'W' && c.score !== 'I') totalCredit += c.credit;
         });
 
         let overallGPA = calcWeightedGPA(courses);
