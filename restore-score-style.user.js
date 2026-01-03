@@ -98,7 +98,7 @@
         .controller-bar a { color: #add8e6 !important; cursor: pointer; }
         .controller-bar.new-color a { color: #add8e6 !important; }
         .osu-text { color: #fff !important; }
-        .footer { color: #add8e6 !important; text-align: center !important; }
+        .footer { color: #add8e6 !important; text-align: center !important; margin: 2rem 0; padding-bottom: 3rem; }
         .footer p { color: #add8e6 !important; }
         .controller-bar-tip { color: #add8e6 !important; text-align: center !important; }
 
@@ -118,11 +118,6 @@
         .rainbow-moving {
             background: linear-gradient(-45deg,#c5fcc5,#ffd1d1,#d1d1ff,#c5fcc5,#ffd1d1,#d1d1ff,#c5fcc5,#ffd1d1,#d1d1ff,#c5fcc5,#ffd1d1,#d1d1ff,#c5fcc5) 0 0 !important;
             background-size: 1800px 200px !important;
-            animation: rainbow-moving 5s linear infinite !important;
-        }
-        @keyframes rainbow-moving {
-            0% { background-position-x: 0; }
-            100% { background-position-x: -1000px; }
         }
 
         #gm-color-toggle { margin-left: 0.8em; cursor: pointer; }
@@ -229,16 +224,40 @@
         });
     }
 
+    let rainbowStyleInjected = false;
+    function ensureRainbowKeyframes() {
+        if (rainbowStyleInjected) return;
+        let style = document.createElement('style');
+        style.textContent = `
+            @keyframes gm-rainbow {
+                from { background-position: 0 0; }
+                to { background-position: -1000px 0; }
+            }
+        `;
+        document.head.appendChild(style);
+        rainbowStyleInjected = true;
+    }
+
     function applyCourseColor(el, score) {
         if (score === null) return;
         if (typeof score === 'number' && score > 99.995) {
+            ensureRainbowKeyframes();
             el.classList.add('rainbow-moving');
-            el.style.background = '';
+            el.style.removeProperty('background');
+            el.style.animation = 'gm-rainbow 5s linear infinite';
         } else {
             el.classList.remove('rainbow-moving');
+            el.style.removeProperty('animation');
             let g = getGradient(score, useGPAMode);
             el.style.background = g.bg;
         }
+    }
+
+    function isOverallBlock(block) {
+        let titleUp = block.querySelector('.layout-row-middle .layout-vertical-up');
+        if (!titleUp) return false;
+        let text = titleUp.textContent.trim();
+        return text === '总绩点' || text === '总学分';
     }
 
     function processSemesterBlock(block) {
@@ -246,7 +265,13 @@
 
         let titleRow = block.querySelector(':scope > div:first-child .layout-row');
         let courseRowEls = Array.from(block.querySelectorAll('.course-row'));
-        if (!titleRow || courseRowEls.length === 0) return;
+        if (!titleRow) return;
+        if (courseRowEls.length === 0) {
+            if (isOverallBlock(block)) {
+                processOverallBlock(block);
+            }
+            return;
+        }
 
         let courseData = courseRowEls.map((el, index) => {
             let row = el.querySelector('.layout-row');
@@ -426,35 +451,39 @@
 
     function processPage() {
         let semesterBlocks = Array.from(document.querySelectorAll('.semester-block'));
-        if (semesterBlocks.length === 0) return;
-
-        let lastBlock = semesterBlocks[semesterBlocks.length - 1];
-        let lastTitleUp = lastBlock.querySelector('.layout-row-middle .layout-vertical-up');
-        let isLastOverall = lastTitleUp && lastTitleUp.textContent.includes('总');
-
-        semesterBlocks.forEach((block, i) => {
-            if (isLastOverall && i === semesterBlocks.length - 1) {
-                processOverallBlock(block);
-            } else {
-                processSemesterBlock(block);
-            }
-        });
+        semesterBlocks.forEach(block => processSemesterBlock(block));
     }
 
     function updateColors() {
-        document.querySelectorAll('.semester-block').forEach(block => {
-            let titleRow = block.querySelector(':scope > div:first-child .layout-row');
-            let courseData = [];
+        let semesterBlocks = Array.from(document.querySelectorAll('.semester-block'));
+        let allCourseData = [];
 
+        semesterBlocks.forEach(block => {
             block.querySelectorAll('.course-row .layout-row').forEach(row => {
                 let score = getScoreFromRow(row);
                 applyCourseColor(row, score);
-                courseData.push({ credit: getCreditFromRow(row), score: score });
+                allCourseData.push({ credit: getCreditFromRow(row), score: score });
             });
+        });
 
-            let avgGPA = calcWeightedGPA(courseData);
-            let avg100 = gpaTo100(avgGPA);
-            if (titleRow) titleRow.style.backgroundColor = getTitleColor(avg100, useGPAMode);
+        let overallAvgGPA = calcWeightedGPA(allCourseData);
+        let overallAvg100 = gpaTo100(overallAvgGPA);
+
+        semesterBlocks.forEach(block => {
+            let titleRow = block.querySelector(':scope > div:first-child .layout-row');
+            if (!titleRow) return;
+
+            if (isOverallBlock(block)) {
+                titleRow.style.backgroundColor = getTitleColor(overallAvg100, useGPAMode);
+            } else {
+                let courseData = [];
+                block.querySelectorAll('.course-row .layout-row').forEach(row => {
+                    courseData.push({ credit: getCreditFromRow(row), score: getScoreFromRow(row) });
+                });
+                let avgGPA = calcWeightedGPA(courseData);
+                let avg100 = gpaTo100(avgGPA);
+                titleRow.style.backgroundColor = getTitleColor(avg100, useGPAMode);
+            }
         });
     }
 
@@ -481,15 +510,24 @@
     }
 
     function restoreFooter() {
-        let existingFooter = document.querySelector('.footer');
-        if (!existingFooter || existingFooter.classList.contains('gm-restored')) return;
+        let container = document.querySelector('.container');
+        if (!container) return;
 
-        existingFooter.innerHTML = `
+        let footer = container.querySelector('.footer');
+        if (footer && footer.classList.contains('gm-restored')) return;
+
+        if (!footer) {
+            footer = document.createElement('div');
+            footer.className = 'footer';
+            container.appendChild(footer);
+        }
+
+        footer.innerHTML = `
             <p>绩点公式 <a>GPA(x) = 4-3*(100-x)<sup>2</sup>/1600</a></p>
             <br>
             <p>学期GPA和总GPA为公式计算所得，请以学校官方结果为准！</p>
         `;
-        existingFooter.classList.add('gm-restored');
+        footer.classList.add('gm-restored');
     }
 
     function init() {
