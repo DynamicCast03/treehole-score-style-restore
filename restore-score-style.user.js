@@ -271,8 +271,18 @@
             if (rightDiv) {
                 let upDiv = rightDiv.querySelector('.layout-vertical-up');
                 let downDiv = rightDiv.querySelector('.layout-vertical-down');
+                if (!downDiv) {
+                    downDiv = document.createElement('div');
+                    downDiv.className = 'layout-vertical-down';
+                    if (upDiv) {
+                        Array.from(upDiv.attributes).forEach(attr => {
+                            if (attr.name.startsWith('data-v-')) downDiv.setAttribute(attr.name, attr.value);
+                        });
+                    }
+                    rightDiv.appendChild(downDiv);
+                }
                 if (upDiv) upDiv.textContent = getScoreDisplay(c.score);
-                if (downDiv) downDiv.textContent = getGPADisplay(c.score);
+                downDiv.textContent = getGPADisplay(c.score);
             }
 
             let detailsDiv = c.row.querySelector('.layout-row-middle .layout-vertical-down');
@@ -320,14 +330,32 @@
         if (titleRightDiv) {
             let upDiv = titleRightDiv.querySelector('.layout-vertical-up');
             let downDiv = titleRightDiv.querySelector('.layout-vertical-down');
-            if (upDiv && downDiv) {
-                let displayGPA = upDiv.textContent.trim();
-                if (displayGPA === '-.--' || !displayGPA) {
-                    displayGPA = avgGPA !== null ? avgGPA.toFixed(2) : '-.--';
+            if (!upDiv) {
+                upDiv = document.createElement('div');
+                upDiv.className = 'layout-vertical-up';
+                if (downDiv) {
+                    Array.from(downDiv.attributes).forEach(attr => {
+                        if (attr.name.startsWith('data-v-')) upDiv.setAttribute(attr.name, attr.value);
+                    });
                 }
-                upDiv.textContent = displayGPA;
-                downDiv.textContent = avg100 !== null ? formatNumber(avg100, 1) : '-.--';
+                titleRightDiv.insertBefore(upDiv, titleRightDiv.firstChild);
             }
+            if (!downDiv) {
+                downDiv = document.createElement('div');
+                downDiv.className = 'layout-vertical-down';
+                if (upDiv) {
+                    Array.from(upDiv.attributes).forEach(attr => {
+                        if (attr.name.startsWith('data-v-')) downDiv.setAttribute(attr.name, attr.value);
+                    });
+                }
+                titleRightDiv.appendChild(downDiv);
+            }
+            let displayGPA = upDiv.textContent.trim();
+            if (displayGPA === '-.--' || !displayGPA) {
+                displayGPA = avgGPA !== null ? avgGPA.toFixed(2) : '-.--';
+            }
+            upDiv.textContent = displayGPA;
+            downDiv.textContent = avg100 !== null ? formatNumber(avg100, 1) : '-.--';
         }
 
         block.dataset.gmProcessed = '1';
@@ -378,10 +406,19 @@
 
         let titleRightDiv = titleRow.querySelector('.layout-row-right .layout-vertical');
         if (titleRightDiv) {
+            let upDiv = titleRightDiv.querySelector('.layout-vertical-up');
             let downDiv = titleRightDiv.querySelector('.layout-vertical-down');
-            if (downDiv) {
-                downDiv.textContent = avg100 !== null ? formatNumber(avg100, 1) : '-.--';
+            if (!downDiv) {
+                downDiv = document.createElement('div');
+                downDiv.className = 'layout-vertical-down';
+                if (upDiv) {
+                    Array.from(upDiv.attributes).forEach(attr => {
+                        if (attr.name.startsWith('data-v-')) downDiv.setAttribute(attr.name, attr.value);
+                    });
+                }
+                titleRightDiv.appendChild(downDiv);
             }
+            downDiv.textContent = avg100 !== null ? formatNumber(avg100, 1) : '-.--';
         }
 
         block.dataset.gmProcessed = '1';
