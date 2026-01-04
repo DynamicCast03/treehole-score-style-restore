@@ -486,7 +486,7 @@
         let overall100Color = typeof overall100 === 'number' ? overall100 : null;
         let overall100Text = typeof overall100 === 'number' ? formatNumber(overall100, 1) : overall100;
 
-        let gpaText = (officialGPA && officialGPA.trim()) || normalizeGPA(getBlockRightUp(block)) || (overallGPA !== null ? overallGPA.toFixed(2) : '-.--');
+        let gpaText = (officialGPA && officialGPA.trim()) || (overallGPA !== null ? overallGPA.toFixed(2) : '-.--');
         if (!gpaText) gpaText = '-.--';
 
         titleRow.style.backgroundColor = getTitleColor(overall100Color, useGPAMode);
