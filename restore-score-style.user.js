@@ -1,13 +1,12 @@
 // ==UserScript==
 // @name         PKU树洞成绩查询样式恢复
 // @namespace    http://tampermonkey.net/
-// @version      3.0
+// @version      3.1
 // @description  恢复PKU树洞成绩查询页面的原始样式
 // @author       Restored
 // @match        *://treehole.pku.edu.cn/*
 // @match        *://pkuhelper.pku.edu.cn/*
-// @grant        GM_addStyle
-// @run-at       document-start
+// @grant        none
 // ==/UserScript==
 
 (function() {
@@ -96,42 +95,52 @@
         return score || '-.--';
     }
 
-    GM_addStyle(`
-        .container { color: #fff !important; }
-        .controller-bar { color: #add8e6 !important; }
-        .controller-bar a { color: #add8e6 !important; cursor: pointer; }
-        .controller-bar.new-color a { color: #add8e6 !important; }
-        .osu-text { color: #fff !important; }
-        .footer { color: #add8e6 !important; text-align: center !important; margin: 2rem 0; padding-bottom: 3rem; }
-        .footer p { color: #add8e6 !important; }
-        .controller-bar-tip { color: #add8e6 !important; text-align: center !important; }
+    (function() {
+        let style = document.createElement('style');
+        style.textContent = `
+            .container { color: #fff !important; }
+            .controller-bar { color: #add8e6 !important; }
+            .controller-bar a { color: #add8e6 !important; cursor: pointer; }
+            .controller-bar.new-color a { color: #add8e6 !important; }
+            .osu-text { color: #fff !important; }
+            .footer { color: #add8e6 !important; text-align: center !important; margin: 2rem 0; padding-bottom: 3rem; }
+            .footer p { color: #add8e6 !important; }
+            .controller-bar-tip { color: #add8e6 !important; text-align: center !important; }
 
-        .semester-block > :first-child {
-            box-shadow: 0 0 6px rgba(0,0,0,.8) !important;
-            border: none !important;
-        }
-        .semester-block > :first-child .layout-row {
-            padding-top: 0.25em !important;
-            padding-bottom: 0.25em !important;
-        }
-        .course-row {
-            box-shadow: 0 -1px 0 #7f7f7f !important;
-            border: none !important;
-        }
+            .semester-block > :first-child {
+                box-shadow: 0 0 6px rgba(0,0,0,.8) !important;
+                border: none !important;
+            }
+            .semester-block > :first-child .layout-row {
+                padding-top: 0.25em !important;
+                padding-bottom: 0.25em !important;
+            }
+            .course-row {
+                box-shadow: 0 -1px 0 #7f7f7f !important;
+                border: none !important;
+            }
 
-        .rainbow-moving {
-            background-image: linear-gradient(-45deg,#c5fcc5,#ffd1d1,#d1d1ff,#c5fcc5,#ffd1d1,#d1d1ff,#c5fcc5,#ffd1d1,#d1d1ff,#c5fcc5,#ffd1d1,#d1d1ff,#c5fcc5) !important;
-            background-size: 1800px 200px !important;
-        }
+            .rainbow-moving {
+                background-image: linear-gradient(-45deg,#c5fcc5,#ffd1d1,#d1d1ff,#c5fcc5,#ffd1d1,#d1d1ff,#c5fcc5,#ffd1d1,#d1d1ff,#c5fcc5,#ffd1d1,#d1d1ff,#c5fcc5) !important;
+                background-size: 1800px 200px !important;
+            }
 
-        #gm-color-toggle { margin-left: 0.8em; cursor: pointer; }
+            #gm-color-toggle { margin-left: 0.8em; cursor: pointer; }
 
-        .gm-credit-cell {
-            flex: 0 0 2.5em; text-align: center;
+            .gm-credit-cell {
+                flex: 0 0 2.5em; text-align: center;
+            }
+            .gm-credit-cell .layout-vertical-up { font-size: 1em; }
+            .gm-credit-cell .layout-vertical-down { font-size: 60%; }
+        `;
+        if (document.head) {
+            document.head.appendChild(style);
+        } else {
+            document.addEventListener('DOMContentLoaded', function() {
+                document.head.appendChild(style);
+            });
         }
-        .gm-credit-cell .layout-vertical-up { font-size: 1em; }
-        .gm-credit-cell .layout-vertical-down { font-size: 60%; }
-    `);
+    })();
 
     let useGPAMode = false;
     let gmOrderCounter = 0;
