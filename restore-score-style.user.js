@@ -163,6 +163,9 @@
     function parseScore(text) {
         if (!text) return null;
         text = text.trim();
+        if (text.includes('缓考')) return 'I';
+        if (text.includes('跨学期')) return 'IP';
+        if (text.includes('退课')) return 'W';
         if (GRADE_MAP.hasOwnProperty(text)) return text;
         if (SPECIAL_TEXT.hasOwnProperty(text)) {
             for (let k in SPECIAL_TEXT) {
@@ -171,6 +174,10 @@
         }
         let n = parseFloat(text);
         return isNaN(n) ? text : n;
+    }
+
+    function isCreditExcluded(score) {
+        return score === 'W' || score === 'I';
     }
 
     function getCreditFromRow(row) {
@@ -370,7 +377,7 @@
         if (!titleRow.querySelector('.gm-credit-cell')) {
             let totalCredit = 0;
             courseData.forEach(c => {
-                if (c.score !== 'W' && c.score !== 'I') totalCredit += c.credit;
+                if (!isCreditExcluded(c.score)) totalCredit += c.credit;
             });
             let creditCell = document.createElement('div');
             creditCell.className = 'layout-row-left gm-credit-cell';
@@ -487,7 +494,7 @@
 
         let totalCredit = 0;
         courses.forEach(c => {
-            if (c.score !== 'W' && c.score !== 'I') totalCredit += c.credit;
+            if (!isCreditExcluded(c.score)) totalCredit += c.credit;
         });
 
         let overallGPA = calcWeightedGPA(courses);
@@ -532,7 +539,7 @@
             let gpaSum = 0, scoreSum = 0, n = 0, creditSum = 0;
             let data = [];
             arr.forEach(c => {
-                if (c.score !== 'W' && c.score !== 'I') creditSum += c.credit;
+                if (!isCreditExcluded(c.score)) creditSum += c.credit;
                 data.push({ left: `${formatNumber(c.credit, 1)}学分`, right: `${c.name} - ${getScoreDisplay(c.score)}` });
                 if (typeof c.score === 'number') {
                     n++;
